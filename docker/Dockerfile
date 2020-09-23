@@ -1,12 +1,14 @@
-FROM alpine:3.8 as conpot-builder
+FROM alpine:latest as conpot-builder
 
 # Install dependencies
-RUN apk add --no-cache ipmitool tcpdump git python3-dev build-base wget py-cffi libxslt-dev openssl-dev libffi-dev
-RUN apk add --no-cache mysql-dev mysql-common
+RUN apk add --no-cache ipmitool tcpdump git python3-dev build-base wget py-cffi libxslt-dev openssl-dev libffi-dev py3-pip
+RUN apk add --no-cache mariadb-dev mariadb-common
+#RUN apk add --no-cache openssl-dev
+
 # Copy the app from the host folder (probably a cloned repo) to the container
 RUN adduser -s /bin/ash -D conpot
 WORKDIR /opt/
-RUN git clone --depth=1 https://github.com/mushorg/conpot.git
+RUN git clone --depth=1 https://github.com/jtatman/conpot.git
 RUN chown conpot:conpot -R /opt/conpot
 
 # Install Python requirements
@@ -17,9 +19,9 @@ WORKDIR /opt/conpot
 #RUN pip3 install --user --upgrade pip
 # or pip --user --disable-pip-version-check
 #RUN pip3 --user --disable-pip-version-check
-RUN pip3 install --user --no-cache-dir -U pip==20.2.3 setuptools
-RUN pip3 install --user --no-cache-dir coverage
-RUN pip3 install --user --no-cache-dir -r requirements.txt
+RUN python3 -m pip install --user --no-cache-dir -U pip==20.2.3 setuptools
+RUN python3 -m pip install --user --no-cache-dir coverage
+RUN python3 -m pip install --user --no-cache-dir -r requirements.txt
 
 # Install the Conpot application
 RUN python3 setup.py install --user --prefix=
@@ -28,11 +30,11 @@ RUN python3 setup.py install --user --prefix=
 ENV PATH=$PATH:/home/conpot/.local/bin
 RUN py.test -v
 
-RUN pip3 uninstall -y setuptools
+RUN python3 -m pip uninstall -y setuptools
 
 WORKDIR /home/conpot
 
-FROM alpine:3.8
+FROM alpine:latest
 
 USER root
 
